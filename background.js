@@ -1,33 +1,45 @@
-// 对同一文件夹内的书签按 title.length 升序排列
+// background.js – 完整可运行版
+// 功能：递归遍历所有书签文件夹，剔除标题尾部空格后按字符长度升序排列
+
+// 核心：处理单个文件夹
 async function sortFolderChildren(parentId) {
   const children = await chrome.bookmarks.getChildren(parentId);
   // 只保留真正的书签（url 存在）
-  const urls = children.filter(n => n.url);
-  if (urls.length < 2) return;          // 无需排序
-  // 按字符长度升序
-  urls.sort((a, b) => a.title.length - b.title.length);
-  // Chrome 的 move 接口：index 越小越靠前
-  for (let i = 0; i < urls.length; i++) {
-    await chrome.bookmarks.move(urls[i].id, { parentId, index: i });
+  const links = children.filter(c => c.url);
+  if (links.length < 2) return;
+
+  // 1. 去掉尾部空格（防止影响长度计算）
+  links.forEach(n => n.title = n.title.trimEnd());
+
+  // 2. 按剔除空格后的长度升序
+  links.sort((a, b) => a.title.length - b.title.length);
+
+  // 3. 依次 move 到最前面
+  for (let i = 0; i < links.length; i++) {
+    await chrome.bookmarks.move(links[i].id, { parentId, index: i });
   }
 }
 
-// 递归处理所有文件夹
-async function walkAndSort(parentId) {
+// 递归遍历所有文件夹
+async function walkTree(parentId) {
   const nodes = await chrome.bookmarks.getChildren(parentId);
-  for (const n of nodes) {
-    if (!n.url) {               // 文件夹
-      await sortFolderChildren(n.id);   // 先排本子
-      await walkAndSort(n.id);          // 再递归
+  for (const node of nodes) {
+    if (!node.url) {                 // 是文件夹
+      await sortFolderChildren(node.id); // 先排本子
+      await walkTree(node.id);           // 再递归
     }
   }
 }
 
-// 点击图标运行一次
-chrome.action.onClicked.addListener(() => {
-  chrome.bookmarks.getTree(async ([root]) => {
-    // 从根节点开始
-    await walkAndSort(root.id);
-    console.log('【Sort by length】done');
+// 点击图标触发
+chrome.action.onClicked.addListener(async () => {
+  const [root] = await chrome.bookmarks.getTree();
+  await walkTree(root.id);
+  // 简单提示
+  chrome.notifications.create({
+    type: "basic",
+    iconUrl: "icon.png",
+    title: "排序完成",
+    message: "已按剔除尾部空格后的标题长度升序排列！"
   });
 });
