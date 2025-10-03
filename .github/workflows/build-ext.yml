@@ -1,0 +1,30 @@
+name: Build Chrome Extension
+
+# 触发条件：打标签 vx.x.x 或手动点击 Run workflow
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 拉源码
+      - uses: actions/checkout@v4
+
+      # 2. 用官方 zip 命令打包（排除 .git / .github 等）
+      - name: Pack extension
+        run: |
+          zip -r chrome-ext-${{ github.ref_name }}.zip . \
+            -x '*.git*' '.github/*' 'README.md' 'LICENSE'
+
+      # 3. 创建 Release 并上传 zip（自动带校验和）
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: chrome-ext-${{ github.ref_name }}.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
