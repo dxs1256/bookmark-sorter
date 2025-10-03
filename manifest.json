@@ -1,0 +1,13 @@
+{
+  "name": "Sort bookmarks by title length",
+  "description": "把每个文件夹里的书签按名字字符长短重新排序",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": ["bookmarks"],
+  "action": {
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
