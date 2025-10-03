@@ -1,30 +1,36 @@
 name: Build Chrome Extension
 
-# 触发条件：打标签 vx.x.x 或手动点击 Run workflow
 on:
+  workflow_dispatch:          # 手动运行
   push:
-    tags:
-      - "v*"
-  workflow_dispatch:
+    branches: [main]          # 每次 push 到 main 也自动发版
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write         # 允许写 release
     steps:
-      # 1. 拉源码
       - uses: actions/checkout@v4
 
-      # 2. 用官方 zip 命令打包（排除 .git / .github 等）
-      - name: Pack extension
+      # 1. 自动生成一个带时间戳的 tag
+      - name: Generate tag
+        id: tag
         run: |
-          zip -r chrome-ext-${{ github.ref_name }}.zip . \
-            -x '*.git*' '.github/*' 'README.md' 'LICENSE'
+          TAG="v$(date +%Y%m%d-%H%M%S)"
+          git tag $TAG
+          git push origin $TAG
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      # 3. 创建 Release 并上传 zip（自动带校验和）
-      - name: Release
-        uses: softprops/action-gh-release@v2
+      # 2. 打包
+      - name: Pack
+        run: |
+          zip -r chrome-ext-${{ steps.tag.outputs.tag }}.zip . \
+            -x '*.git*' '.github/*'
+
+      # 3. 发布 Release
+      - uses: softprops/action-gh-release@v2
         with:
-          files: chrome-ext-${{ github.ref_name }}.zip
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: chrome-ext-${{ steps.tag.outputs.tag }}.zip
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
