@@ -1,9 +1,19 @@
 {
-  "name": "书签按像素宽度排序",
-  "description": "用渲染像素宽度排序，而非字符长度",
-  "version": "1.0",
+  "name": "书签按长度排序",
+  "description": "把每个文件夹里的书签按标题字符长短自动排序",
+  "version": "1.0.0",
   "manifest_version": 3,
-  "permissions": ["bookmarks", "offscreen"],
-  "action": { "default_icon": "icon.png" },
-  "background": { "service_worker": "background.js" }
+  "permissions": ["bookmarks"],
+  "action": {
+    "default_title": "点我立即排序",
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
 }
