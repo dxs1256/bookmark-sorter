@@ -1,13 +1,9 @@
 {
-  "name": "Sort bookmarks by title length",
-  "description": "把每个文件夹里的书签按名字字符长短重新排序",
+  "name": "书签按像素宽度排序",
+  "description": "用渲染像素宽度排序，而非字符长度",
   "version": "1.0",
   "manifest_version": 3,
-  "permissions": ["bookmarks"],
-  "action": {
-    "default_icon": "icon.png"
-  },
-  "background": {
-    "service_worker": "background.js"
-  }
+  "permissions": ["bookmarks", "offscreen"],
+  "action": { "default_icon": "icon.png" },
+  "background": { "service_worker": "background.js" }
 }
